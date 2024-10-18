@@ -4,29 +4,21 @@ import Logout from "../components/Logout";
 
 const UserPage: React.FC = () => {
   const [message, setMessage] = useState<string>("");
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setMessage("Ingen token hittades. Omdirigerar till inloggningssidan...");
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
-      return;
-    }
-
     const fetchUserPage = async () => {
       try {
         const response = await fetch("http://localhost:3000/userpage", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          method: "GET",
+          credentials: "include", // Detta skickar cookies automatiskt
         });
 
         if (response.ok) {
           const data = await response.json();
           setMessage(data.message);
+          setIsLoggedIn(true); // Inloggning lyckades, visa sidan
         } else {
           setMessage("Åtkomst nekad. Omdirigerar till inloggningssidan...");
           setTimeout(() => {
@@ -46,7 +38,7 @@ const UserPage: React.FC = () => {
     <div className="user-page">
       <h1>Användarsida</h1>
       <p>{message}</p>
-      <Logout />
+      {isLoggedIn && <Logout />}
     </div>
   );
 };

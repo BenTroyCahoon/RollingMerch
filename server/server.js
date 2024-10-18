@@ -1,14 +1,14 @@
-// import dotenv from "dotenv";
-// import path from "path";
-
-// // Använd absolut sökväg för att ladda in .env från projektets rotkatalog
-// dotenv.config({ path: path.resolve(__dirname, "../.env") });
-
-// console.log("JWT_SECRET från .env:", process.env.JWT_SECRET);
-
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import mariadb from "mariadb";
+import cors from "cors";
+import validator from "validator";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
 
 // Definiera __dirname med ES-moduler
 const __filename = fileURLToPath(import.meta.url);
@@ -18,16 +18,35 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 // Kontrollera att miljövariabeln är laddad
-console.log("JWT_SECRET från .env:", process.env.JWT_SECRET);
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET saknas i miljövariabler");
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
-import express from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import mariadb from "mariadb";
-import cors from "cors";
 const app = express();
-app.use(cors());
+
+// Middleware
+app.use(
+  cors({
+    origin: "http://localhost:5174",
+    credentials: true, // Tillåter cookies att skickas
+  })
+);
 app.use(express.json());
+app.use(helmet());
+app.use(cookieParser());
+
+// Konfigurera Content Security Policy (CSP) med Helmet
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      // Lägg till andra direktiv om det behövs, t.ex. för CDN
+      // scriptSrc: ["'self'", "https://cdn.example.com"],
+    },
+  })
+);
 
 // Setup connection to MariaDB
 const pool = mariadb.createPool({
@@ -50,21 +69,19 @@ pool
     process.exit(1); // Avslutar processen om databasanslutningen misslyckas
   });
 
-// // Secret key for JWT from .env
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET saknas i miljövariabler");
-}
-
-// POST /login för att autentisera användare och skapa en JWT-token
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
+    console.log("Original användarnamn:", username);
+    // Sanera användarnamn för att undvika XSS
+    let sanitizedUsername = validator.escape(username);
+
+    console.log("Sanerat användarnamn:", sanitizedUsername);
+
     const conn = await pool.getConnection();
     const result = await conn.query("SELECT * FROM logins WHERE username = ?", [
-      username,
+      sanitizedUsername,
     ]);
     conn.release(); // Frigör anslutningen när vi är klara
 
@@ -89,25 +106,44 @@ app.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    return res.json({ token });
+    // Sätt JWT-token i HttpOnly, Secure cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Sätt till true i produktion
+      sameSite: "Strict", // eller 'Lax' baserat på dina behov
+      maxAge: 60 * 60 * 1000, // 1 timme
+    });
+
+    return res.json({
+      message: "Inloggning lyckades",
+      username: user.username,
+      access_level: user.access_level,
+    });
   } catch (error) {
     console.error("Serverfel:", error);
     return res.status(500).json({ message: "Serverfel" });
   }
 });
 
-// Middleware för att verifiera JWT och roller
+// POST /logout för att logga ut användaren
+app.post("/logout", (req, res) => {
+  res.clearCookie("token"); // Rensar JWT-cookien från klienten
+  res.json({ message: "Utloggning lyckades" });
+});
+
+// Middleware för att verifiera JWT och roller via cookies
 const verifyToken = (role) => (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  const token = req.cookies.token; // Hämta token från cookien
 
   if (!token) {
     return res.status(401).json({ message: "Ingen token angiven" });
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET); // Verifiera token med hemlig nyckel
     req.user = decoded;
 
+    // Kontrollera om användaren har tillräcklig åtkomstnivå
     if (role !== undefined && req.user.access_level < role) {
       return res.status(403).json({ message: "Åtkomst nekad" });
     }
@@ -120,16 +156,25 @@ const verifyToken = (role) => (req, res, next) => {
 
 // GET /userpage - skyddad rutt för användare och administratörer
 app.get("/userpage", verifyToken(1), (req, res) => {
-  if (req.user?.access_level >= 1) {
-    res.json({ message: "Välkommen till användarsidan!" });
-  } else {
-    res.status(403).json({ message: "Åtkomst nekad" });
-  }
+  res.json({ message: "Välkommen till användarsidan!" });
 });
 
 // GET /adminpage - skyddad rutt för administratörer
 app.get("/adminpage", verifyToken(2), (req, res) => {
   res.json({ message: "Välkommen till adminsidan!" });
+});
+
+// GET /userinfo - returnera användarens information baserat på JWT-token
+app.get("/userinfo", verifyToken(), (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Ingen token angiven" });
+  }
+
+  // Returnera användarinformation från JWT-tokenen
+  res.json({
+    username: req.user.username,
+    access_level: req.user.access_level,
+  });
 });
 
 // Starta servern på port 3000

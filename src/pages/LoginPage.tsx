@@ -1,14 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import jwtDecode from "jwt-decode"; // Korrekt import av jwt-decode för TypeScript
-
-// Definiera ett interface för token-payloaden
-interface DecodedJwtPayload {
-  username: string;
-  access_level: number;
-  iat: number;
-  exp: number;
-}
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState<string>("");
@@ -27,29 +18,38 @@ const LoginPage: React.FC = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password }),
+        credentials: "include",
       });
-
-      const data = await response.json();
 
       if (response.ok) {
         // Spara tokenen i localStorage
-        localStorage.setItem("token", data.token);
+
         setMessage("Inloggning lyckades!");
 
-        // Dekryptera tokenen för att kontrollera användarrollen
-        const decodedToken = jwtDecode<DecodedJwtPayload>(data.token);
+        const userInfoResponse = await fetch("http://localhost:3000/userinfo", {
+          method: "GET",
+          credentials: "include", // Inkludera cookies i begäran
+        });
 
-        // Kontrollera access level och navigera till rätt sida
-        if (decodedToken.access_level === 2) {
-          // Administratör: omdirigera till adminsidan
-          navigate("/adminpage");
+        if (userInfoResponse.ok) {
+          const userData = await userInfoResponse.json();
+
+          // Kontrollera access level och navigera till rätt sida
+          if (userData.access_level === 2) {
+            // Administratör: omdirigera till adminsidan
+            navigate("/adminpage");
+          } else if (userData.access_level === 1) {
+            navigate("/userpage");
+          } else {
+            navigate("/");
+          }
         } else {
-          // Vanlig användare: omdirigera till användarsidan
-          navigate("/userpage");
+          // Visa felmeddelande om inloggningen misslyckades
+          setMessage("Misslyckades med att hämta användarinfo");
         }
       } else {
-        // Visa felmeddelande om inloggningen misslyckades
-        setMessage(data.message || "Inloggning misslyckades");
+        const data = await response.json();
+        setMessage(data.message || "inloggning misslyckades");
       }
     } catch (error) {
       console.error("Fel vid inloggning:", error);
