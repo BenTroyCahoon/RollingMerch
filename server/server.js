@@ -120,7 +120,11 @@ const verifyToken = (role) => (req, res, next) => {
 
 // GET /userpage - skyddad rutt för användare och administratörer
 app.get("/userpage", verifyToken(1), (req, res) => {
-  res.json({ message: "Välkommen till användarsidan!" });
+  if (req.user?.access_level >= 1) {
+    res.json({ message: "Välkommen till användarsidan!" });
+  } else {
+    res.status(403).json({ message: "Åtkomst nekad" });
+  }
 });
 
 // GET /adminpage - skyddad rutt för administratörer
