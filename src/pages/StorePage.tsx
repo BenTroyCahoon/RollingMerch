@@ -1,34 +1,39 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import LogoutButton from "../components/Logout";
+import React, { useEffect } from "react";
+import LogoutButton from "../components/LogutButton";
+import LoginButton from "../components/LoginButton";
+import { useAuth } from "../context/useAuth";
+import Cookies from "js-cookie";
+import "../styles/PageLayout.css";
 
-const StoragePage: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>("");
-  const navigate = useNavigate();
+const StorePage: React.FC = () => {
+  const { isLoggedIn, setIsLoggedIn } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setMessage("Knas du saknar nått, skickar dej till inloggningssidan...");
+    const checkLoginStatus = () => {
       setTimeout(() => {
-        navigate("/");
-      }, 1500);
-      return;
-    } else {
-      setIsLoggedIn(true);
-    }
-  }, [navigate]);
+        const token = Cookies.get("token");
+
+        if (token) {
+          console.log("Token hittades, användare är inloggad.");
+          setIsLoggedIn(true);
+        } else {
+          console.log("Ingen token hittades, användare är inte inloggad.");
+          setIsLoggedIn(false);
+        }
+      }, 500);
+    };
+
+    checkLoginStatus();
+  }, [setIsLoggedIn]);
 
   return (
     <div className="page-layout">
-      {isLoggedIn && <LogoutButton />}
+      {isLoggedIn ? <LogoutButton /> : <LoginButton />}
       <div className="page-content">
         <h1 className="page-title">HÄR ÄR AFFÄREN!</h1>
-        <p>{message}</p>
       </div>
     </div>
   );
 };
 
-export default StoragePage;
+export default StorePage;

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Logout from "../components/Logout";
+import LogoutButton from "../components/LogutButton";
+import "../styles/PageLayout.css";
 
 const UserPage: React.FC = () => {
-  const [message, setMessage] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,10 +36,12 @@ const UserPage: React.FC = () => {
   }, [navigate]);
 
   return (
-    <div className="user-page">
-      <h1>Användarsida</h1>
-      <p>{message}</p>
-      {isLoggedIn && <Logout />}
+    <div className="page-layout">
+      {isLoggedIn && <LogoutButton />}
+      <div className="page-content">
+        <h1 className="page-title">Användarsida</h1>
+        <p>{message}</p>
+      </div>
     </div>
   );
 };

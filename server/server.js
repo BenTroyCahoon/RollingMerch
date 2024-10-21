@@ -17,15 +17,7 @@ const __dirname = path.dirname(__filename);
 // Använd absolut sökväg för att ladda in .env från projektets rotkatalog
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-// Kontrollera att miljövariabeln är laddad
-if (!process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET saknas i miljövariabler");
-}
-const JWT_SECRET = process.env.JWT_SECRET;
-
 const app = express();
-
-// Middleware
 app.use(
   cors({
     origin: "http://localhost:5174",
@@ -33,8 +25,8 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(helmet());
 app.use(cookieParser());
+app.use(helmet());
 
 // Konfigurera Content Security Policy (CSP) med Helmet
 app.use(
@@ -42,8 +34,7 @@ app.use(
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
-      // Lägg till andra direktiv om det behövs, t.ex. för CDN
-      // scriptSrc: ["'self'", "https://cdn.example.com"],
+      // Lägg till andra direktiv om det behövs
     },
   })
 );
@@ -54,7 +45,7 @@ const pool = mariadb.createPool({
   user: "birgitt",
   password: "andersson",
   database: "RollingMerch",
-  connectionLimit: 10, // För att begränsa antalet samtidiga anslutningar
+  connectionLimit: 10,
 });
 
 // Kontrollera anslutningen till MariaDB innan servern startar
@@ -69,15 +60,20 @@ pool
     process.exit(1); // Avslutar processen om databasanslutningen misslyckas
   });
 
+// // Secret key for JWT from .env
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET saknas i miljövariabler");
+}
+
+// POST /login för att autentisera användare och skapa en JWT-token
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    console.log("Original användarnamn:", username);
     // Sanera användarnamn för att undvika XSS
     let sanitizedUsername = validator.escape(username);
-
-    console.log("Sanerat användarnamn:", sanitizedUsername);
 
     const conn = await pool.getConnection();
     const result = await conn.query("SELECT * FROM logins WHERE username = ?", [
@@ -108,10 +104,11 @@ app.post("/login", async (req, res) => {
 
     // Sätt JWT-token i HttpOnly, Secure cookie
     res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Sätt till true i produktion
-      sameSite: "Strict", // eller 'Lax' baserat på dina behov
+      httpOnly: false,
+      secure: false,
+      sameSite: "Lax", // eller 'Lax' baserat på dina behov
       maxAge: 60 * 60 * 1000, // 1 timme
+      path: "/",
     });
 
     return res.json({
@@ -125,34 +122,51 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// POST /logout för att logga ut användaren
+// POST /logout för att logga ut användaren och ta bort JWT-cookien
 app.post("/logout", (req, res) => {
-  res.clearCookie("token"); // Rensar JWT-cookien från klienten
-  res.json({ message: "Utloggning lyckades" });
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // Se till att sätta till true i produktion
+    sameSite: "Lax",
+  });
+
+  res.status(200).json({ message: "Utloggad och cookie raderad" });
 });
 
-// Middleware för att verifiera JWT och roller via cookies
+// Middleware för att verifiera JWT och roller
 const verifyToken = (role) => (req, res, next) => {
-  const token = req.cookies.token; // Hämta token från cookien
+  // console.log("Cookies på serversidan:", req.cookies);
+
+  const token = req.cookies.token;
 
   if (!token) {
+    console.log("Ingen token hittades - blockad åtkomst");
     return res.status(401).json({ message: "Ingen token angiven" });
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET); // Verifiera token med hemlig nyckel
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
 
-    // Kontrollera om användaren har tillräcklig åtkomstnivå
     if (role !== undefined && req.user.access_level < role) {
       return res.status(403).json({ message: "Åtkomst nekad" });
     }
 
     next();
   } catch (err) {
+    console.log("Token fel - blockad");
     return res.status(401).json({ message: "Ogiltig token" });
   }
 };
+
+// GET /userinfo - returnera användarens information baserat på JWT-token
+app.get("/userinfo", verifyToken(), (req, res) => {
+  // Returnera användarinformation från JWT-tokenen
+  res.json({
+    username: req.user.username,
+    access_level: req.user.access_level,
+  });
+});
 
 // GET /userpage - skyddad rutt för användare och administratörer
 app.get("/userpage", verifyToken(1), (req, res) => {
@@ -162,19 +176,6 @@ app.get("/userpage", verifyToken(1), (req, res) => {
 // GET /adminpage - skyddad rutt för administratörer
 app.get("/adminpage", verifyToken(2), (req, res) => {
   res.json({ message: "Välkommen till adminsidan!" });
-});
-
-// GET /userinfo - returnera användarens information baserat på JWT-token
-app.get("/userinfo", verifyToken(), (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: "Ingen token angiven" });
-  }
-
-  // Returnera användarinformation från JWT-tokenen
-  res.json({
-    username: req.user.username,
-    access_level: req.user.access_level,
-  });
 });
 
 // Starta servern på port 3000

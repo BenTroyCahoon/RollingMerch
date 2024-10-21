@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "../styles/LoginPage.css";
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState<string>("");
@@ -22,46 +23,31 @@ const LoginPage: React.FC = () => {
       });
 
       if (response.ok) {
-        // Spara tokenen i localStorage
-
         setMessage("Inloggning lyckades!");
 
         const userInfoResponse = await fetch("http://localhost:3000/userinfo", {
           method: "GET",
-          credentials: "include", // Inkludera cookies i begäran
+          credentials: "include",
         });
 
         if (userInfoResponse.ok) {
-          const userData = await userInfoResponse.json();
-
-          // Kontrollera access level och navigera till rätt sida
-          if (userData.access_level === 2) {
-            // Administratör: omdirigera till adminsidan
-            navigate("/adminpage");
-          } else if (userData.access_level === 1) {
-            navigate("/userpage");
-          } else {
-            navigate("/");
-          }
+          navigate("/");
         } else {
-          // Visa felmeddelande om inloggningen misslyckades
-          setMessage("Misslyckades med att hämta användarinfo");
+          const data = await response.json();
+          setMessage(data.message);
         }
-      } else {
-        const data = await response.json();
-        setMessage(data.message || "inloggning misslyckades");
       }
     } catch (error) {
-      console.error("Fel vid inloggning:", error);
-      setMessage("Serverfel, försök igen senare.");
+      console.error("Något gick fel vid inloggning:", error);
+      setMessage("Något gick fel vid inloggning, försök igen senare");
     }
   };
 
   return (
     <div className="login-page">
-      <h1>Inloggning</h1>
-      <form onSubmit={handleLogin}>
-        <div>
+      <h1 className="login-title">Inloggning</h1>
+      <form className="login-form" onSubmit={handleLogin}>
+        <div className="form-group">
           <label htmlFor="username">Användarnamn:</label>
           <input
             type="text"
@@ -71,7 +57,7 @@ const LoginPage: React.FC = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="password">Lösenord:</label>
           <input
             type="password"
@@ -81,9 +67,11 @@ const LoginPage: React.FC = () => {
             required
           />
         </div>
-        <button type="submit">Logga in</button>
+        <button className="login-button" type="submit">
+          Logga in
+        </button>
       </form>
-      {message && <p>{message}</p>}
+      {message && <p className="login-message">{message}</p>}
     </div>
   );
 };
