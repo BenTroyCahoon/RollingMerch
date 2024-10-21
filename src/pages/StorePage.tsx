@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import LogoutButton from "../components/LogutButton";
+import LogoutButton from "../components/LogoutButton";
 import LoginButton from "../components/LoginButton";
 import { useAuth } from "../context/useAuth";
 import Cookies from "js-cookie";

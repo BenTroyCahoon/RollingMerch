@@ -31,7 +31,7 @@ const LoginPage: React.FC = () => {
         });
 
         if (userInfoResponse.ok) {
-          navigate("/");
+          navigate("/userpage");
         } else {
           const data = await response.json();
           setMessage(data.message);

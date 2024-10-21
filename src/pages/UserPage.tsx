@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import LogoutButton from "../components/LogutButton";
+import LogoutButton from "../components/LogoutButton";
 import "../styles/PageLayout.css";
 
 const UserPage: React.FC = () => {

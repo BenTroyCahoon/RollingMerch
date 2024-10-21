@@ -178,6 +178,71 @@ app.get("/adminpage", verifyToken(2), (req, res) => {
   res.json({ message: "Välkommen till adminsidan!" });
 });
 
+// POST /feedback - Hantera feedback från användare
+app.post("/feedback", verifyToken(1), async (req, res) => {
+  const { username, email, feedback, rating } = req.body;
+
+  // Validera och sanera inmatad data
+  if (!validator.isEmail(email)) {
+    return res.status(400).json({ message: "Ogiltig e-postadress" });
+  }
+
+  if (!validator.isLength(feedback, { min: 10 })) {
+    return res
+      .status(400)
+      .json({ message: "Feedback måste vara minst 10 tecken långt" });
+  }
+
+  if (!validator.isInt(rating, { min: 1, max: 5 })) {
+    return res
+      .status(400)
+      .json({ message: "Betyg måste vara mellan 1 och 5 stjärnor" });
+  }
+
+  const sanitizedUsername = validator.escape(username || "Anonym");
+  const sanitizedEmail = validator.normalizeEmail(email);
+  const sanitizedFeedback = validator.escape(feedback);
+  const sanitizedRating = parseInt(rating, 10);
+
+  try {
+    const conn = await pool.getConnection();
+    const sql =
+      "INSERT INTO feedback (username, email, feedback, rating) VALUES (?, ?, ?, ?)";
+    await conn.query(sql, [
+      sanitizedUsername,
+      sanitizedEmail,
+      sanitizedFeedback,
+      sanitizedRating,
+    ]);
+    conn.release();
+
+    res.status(201).json({ message: "Tack för din feedback!" });
+  } catch (error) {
+    console.error("Fel vid lagring av feedback:", error);
+    res.status(500).json({ message: "Serverfel" });
+  }
+});
+
+// DELETE /feedback/:id - Endast administratörer kan ta bort feedback
+app.delete("/feedback/:id", verifyToken(2), async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const conn = await pool.getConnection();
+    const result = await conn.query("DELETE FROM feedback WHERE id = ?", [id]);
+    conn.release();
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Feedback inte hittad" });
+    }
+
+    res.status(200).json({ message: "Feedback borttagen" });
+  } catch (error) {
+    console.error("Fel vid borttagning av feedback:", error);
+    res.status(500).json({ message: "Serverfel" });
+  }
+});
+
 // Starta servern på port 3000
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
