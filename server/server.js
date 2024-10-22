@@ -179,67 +179,74 @@ app.get("/adminpage", verifyToken(2), (req, res) => {
 });
 
 // POST /feedback - Hantera feedback från användare
-app.post("/feedback", verifyToken(1), async (req, res) => {
-  const { username, email, feedback, rating } = req.body;
+app.post("/reviews", async (req, res) => {
+  const { username, review } = req.body;
 
-  // Validera och sanera inmatad data
-  if (!validator.isEmail(email)) {
-    return res.status(400).json({ message: "Ogiltig e-postadress" });
+  if (!review) {
+    return res.status(400).json({ message: "Recension krävs" });
   }
-
-  if (!validator.isLength(feedback, { min: 10 })) {
-    return res
-      .status(400)
-      .json({ message: "Feedback måste vara minst 10 tecken långt" });
-  }
-
-  if (!validator.isInt(rating, { min: 1, max: 5 })) {
-    return res
-      .status(400)
-      .json({ message: "Betyg måste vara mellan 1 och 5 stjärnor" });
-  }
-
-  const sanitizedUsername = validator.escape(username || "Anonym");
-  const sanitizedEmail = validator.normalizeEmail(email);
-  const sanitizedFeedback = validator.escape(feedback);
-  const sanitizedRating = parseInt(rating, 10);
 
   try {
     const conn = await pool.getConnection();
-    const sql =
-      "INSERT INTO feedback (username, email, feedback, rating) VALUES (?, ?, ?, ?)";
-    await conn.query(sql, [
-      sanitizedUsername,
-      sanitizedEmail,
-      sanitizedFeedback,
-      sanitizedRating,
+
+    const reviewer = username || "Anonym";
+
+    // Infoga recensionen i databasen
+    await conn.query("INSERT INTO reviews (username, review) VALUES (?, ?)", [
+      reviewer,
+      review,
     ]);
+
+    // Frigör anslutningen
     conn.release();
 
-    res.status(201).json({ message: "Tack för din feedback!" });
+    return res.status(201).json({ message: "Recensionen mottagen och sparad" });
   } catch (error) {
-    console.error("Fel vid lagring av feedback:", error);
-    res.status(500).json({ message: "Serverfel" });
+    console.error("Fel vid sparande av recension:", error);
+    return res
+      .status(500)
+      .json({ message: "Serverfel vid sparande av recension" });
   }
 });
 
-// DELETE /feedback/:id - Endast administratörer kan ta bort feedback
-app.delete("/feedback/:id", verifyToken(2), async (req, res) => {
-  const { id } = req.params;
-
+// GET /reviews för att hämta alla recensioner från databasen
+app.get("/reviews", async (req, res) => {
   try {
+    // Skapa en anslutning till databasen
     const conn = await pool.getConnection();
-    const result = await conn.query("DELETE FROM feedback WHERE id = ?", [id]);
+
+    // Hämta alla recensioner
+    const reviews = await conn.query(
+      "SELECT * FROM reviews ORDER BY created_at DESC"
+    );
+
+    // Frigör anslutningen
     conn.release();
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "Feedback inte hittad" });
-    }
-
-    res.status(200).json({ message: "Feedback borttagen" });
+    return res.status(200).json(reviews);
   } catch (error) {
-    console.error("Fel vid borttagning av feedback:", error);
-    res.status(500).json({ message: "Serverfel" });
+    console.error("Fel vid hämtning av recensioner:", error);
+    return res
+      .status(500)
+      .json({ message: "Serverfel vid hämtning av recensioner" });
+  }
+});
+
+app.delete("/reviews/:id", verifyToken(2), async (req, res) => {
+  const reviewId = req.params.id;
+  try {
+    const conn = await pool.getConnection();
+    const result = await conn.query("DELETE FROM reviews WHERE id = ?", [
+      reviewId,
+    ]);
+    conn.release();
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Recension ej funnen" });
+    }
+    return res.status(200).json({ message: "Recension raderad" });
+  } catch (error) {
+    console.error("Serverfel vid radering av recension:", error);
+    return res.status(500).json({ message: "Serverfel" });
   }
 });
 
