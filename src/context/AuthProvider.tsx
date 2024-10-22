@@ -1,7 +1,7 @@
 import React, { createContext, useState, ReactNode } from "react";
 
 interface User {
-  usernmae: string;
+  username: string;
   access_level: number;
 }
 interface AuthContextType {

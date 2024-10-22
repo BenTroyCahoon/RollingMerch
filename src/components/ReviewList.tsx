@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/useAuth";
-// import "../styles/ReviewList.css";
+import "../styles/ReviewList.css";
 
 interface Review {
   id: number;
   username: string;
   review: string;
   created_at: string;
+  rating: number;
 }
 
 const ReviewList: React.FC = () => {
@@ -57,6 +58,27 @@ const ReviewList: React.FC = () => {
       console.error("Fel vid borttagning av recension:", error);
     }
   };
+
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        stars.push(
+          <div key={i} className="star filled">
+            ★
+          </div>
+        );
+      } else {
+        stars.push(
+          <span key={i} className="star">
+            ☆
+          </span>
+        );
+      }
+    }
+    return stars;
+  };
+
   return (
     <div className="reviews-container">
       <h2 className="reviews-title">Recensioner:</h2>
@@ -69,11 +91,12 @@ const ReviewList: React.FC = () => {
               <p className="review-author">
                 {r.username === "Anonymous" ? "Anonym" : r.username}
               </p>
+
               <p className="review-text">{r.review}</p>
-              <p className="review-date">
+              <div className="review-rating">{renderStars(r.rating)}</div>
+              <div className="review-date">
                 {new Date(r.created_at).toLocaleString()}
-              </p>
-              {/* Visa "Radera"-knappen om användaren är inloggad som administratör */}
+              </div>
               {isLoggedIn && user?.access_level === 2 && (
                 <button
                   className="delete-button"

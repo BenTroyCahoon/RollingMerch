@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import ReviewList from "../components/ReviewList";
 import LogoutButton from "../components/LogoutButton";
 import LoginButton from "../components/LoginButton";
 import { useAuth } from "../context/useAuth";
@@ -40,6 +41,7 @@ const StorePage: React.FC = () => {
         >
           Lämna en recension
         </button>
+        <ReviewList />
       </div>
     </div>
   );
