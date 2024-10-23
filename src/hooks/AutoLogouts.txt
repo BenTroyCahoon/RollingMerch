@@ -1,0 +1,44 @@
+// import { useEffect } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { useAuth } from "../context/useAuth";
+
+// const useAutoLogout = (timeout: number = 300000) => {
+//   const { setIsLoggedIn, setUser } = useAuth(); // Använd vår AuthProvider för att hantera utloggning
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     // Funktion för att logga ut användaren
+//     const logoutUser = () => {
+//       alert("Du har blivit automatiskt utloggad p.g.a. inaktivitet.");
+//       setIsLoggedIn(false); // Ändra inloggningsstatus till utloggad
+//       setUser(null); // Rensa användarinformation
+//       navigate("/login"); // Navigera användaren till inloggningssidan
+//     };
+
+//     // Timer för utloggning
+//     let logoutTimer = setTimeout(logoutUser, timeout);
+
+//     // Funktion för att återställa timern vid användaraktivitet
+//     const resetTimer = () => {
+//       clearTimeout(logoutTimer);
+//       logoutTimer = setTimeout(logoutUser, timeout);
+//     };
+
+//     // Eventlyssnare för att återställa timern vid olika användaraktiviteter
+//     window.addEventListener("mousemove", resetTimer);
+//     window.addEventListener("keydown", resetTimer);
+//     window.addEventListener("click", resetTimer);
+//     window.addEventListener("scroll", resetTimer);
+
+//     // Rensa eventlyssnare och timer när komponenten avmonteras
+//     return () => {
+//       clearTimeout(logoutTimer);
+//       window.removeEventListener("mousemove", resetTimer);
+//       window.removeEventListener("keydown", resetTimer);
+//       window.removeEventListener("click", resetTimer);
+//       window.removeEventListener("scroll", resetTimer);
+//     };
+//   }, [navigate, setIsLoggedIn, setUser, timeout]);
+// };
+
+// export default useAutoLogout;

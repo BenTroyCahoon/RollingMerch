@@ -33,6 +33,9 @@ const RegisterPage: React.FC = () => {
       setMessage("Lösenorden matchar inte!");
       return;
     }
+    if (username && password.toLowerCase() === username.toLowerCase()) {
+      setMessage("lösenordet får inte likna användarnamnet pondejo! tänk lite");
+    }
     // Kolla att lösenordet är tillräckligt starkt (t.ex. minst 3 av 4)
     if (passwordStrength < 3) {
       setMessage("Lösenordet är för svagt. Försök med ett starkare lösenord.");

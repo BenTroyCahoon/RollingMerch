@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/LoginPage.css";
 import { useAuth } from "../context/useAuth";
@@ -52,6 +52,16 @@ const LoginPage: React.FC = () => {
       setMessage("Något gick fel vid inloggning, försök igen senare");
     }
   };
+  useEffect(() => {
+    // Kolla om autoLogout-flaggan finns i localStorage
+    const autoLogout = localStorage.getItem("autoLogout");
+
+    if (autoLogout) {
+      alert("Du har blivit automatiskt utloggad p.g.a. inaktivitet.");
+      // Rensa flaggan så att alerten inte visas igen
+      localStorage.removeItem("autoLogout");
+    }
+  }, []);
 
   return (
     <div className="login-page">
