@@ -66,6 +66,44 @@ const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET saknas i miljövariabler");
 }
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body;
+
+  // Validera användarnamn
+  if (!validator.isAlphanumeric(username)) {
+    return res.status(400).json({
+      message: "Användarnamn får endast innehålla bokstäver och siffror",
+    });
+  }
+
+  // Validera lösenordslängd
+  if (!validator.isLength(password, { min: 8 })) {
+    return res
+      .status(400)
+      .json({ message: "Lösenordet måste vara minst 8 tecken långt" });
+  }
+
+  // Sanera användarnamn och lösenord för att förhindra XSS
+  const sanitizedUsername = validator.escape(username);
+  const sanitizedPassword = validator.escape(password);
+
+  try {
+    // Hasha lösenordet innan det sparas i databasen
+    const hashedPassword = await bcrypt.hash(sanitizedPassword, 10);
+
+    // Spara användaren i databasen
+    const conn = await pool.getConnection();
+    const sql =
+      "INSERT INTO logins (username, password, access_level) VALUES (?, ?, ?)";
+    await conn.query(sql, [sanitizedUsername, hashedPassword, 1]);
+    conn.release();
+
+    res.status(201).json({ message: "Registreringen lyckades!" });
+  } catch (error) {
+    console.error("Fel vid registrering:", error);
+    res.status(500).json({ message: "Serverfel vid registrering" });
+  }
+});
 
 // POST /login för att autentisera användare och skapa en JWT-token
 app.post("/login", async (req, res) => {
