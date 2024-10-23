@@ -55,6 +55,7 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="login-page">
+      {showRegister && <RegisterPage />}
       <h1 className="login-title">Inloggning</h1>
       <form className="login-form" onSubmit={handleLogin}>
         <div className="form-group">
@@ -89,8 +90,6 @@ const LoginPage: React.FC = () => {
       >
         {showRegister ? "Dölj registrering" : "Registrera dig"}
       </button>
-
-      {showRegister && <RegisterPage />}
     </div>
   );
 };
