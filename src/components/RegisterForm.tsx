@@ -87,17 +87,18 @@ const RegisterPage: React.FC = () => {
             onChange={handlePasswordChange}
             required
           />
-          {/* Visa lösenordets styrka baserat på zxcvbn */}
-          <div className="password-strength">
-            {passwordStrength === 0 && <p>Styrka: Mycket svagt</p>}
-            {passwordStrength === 1 && <p>Styrka: Svagt</p>}
-            {passwordStrength === 2 && <p>Styrka: Medel</p>}
-            {passwordStrength === 3 && <p>Styrka: Starkt</p>}
-            {passwordStrength === 4 && <p>Styrka: Väldigt starkt</p>}
-          </div>
-          {passwordFeedback && (
-            <div className="password-feedback">
-              <p>Tips: {passwordFeedback}</p>
+          {password.length > 0 && (
+            <div className="password-strength">
+              {passwordStrength === 0 && <p>Styrka: Mycket svagt</p>}
+              {passwordStrength === 1 && <p>Styrka: Svagt</p>}
+              {passwordStrength === 2 && <p>Styrka: Medel</p>}
+              {passwordStrength === 3 && <p>Styrka: Starkt</p>}
+              {passwordStrength === 4 && <p>Styrka: Väldigt starkt</p>}
+              {passwordFeedback && (
+                <div className="password-feedback">
+                  <p>Tips: {passwordFeedback}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
