@@ -11,7 +11,7 @@ const UserPage: React.FC = () => {
   useEffect(() => {
     const fetchUserPage = async () => {
       try {
-        const response = await fetch("http://localhost:3000/userpage", {
+        const response = await fetch("http://localhost:5000/userpage", {
           method: "GET",
           credentials: "include", // Detta skickar cookies automatiskt
         });

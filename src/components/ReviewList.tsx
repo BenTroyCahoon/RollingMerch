@@ -20,7 +20,7 @@ const ReviewList: React.FC = () => {
 
     const fetchReviews = async () => {
       try {
-        const response = await fetch("http://localhost:3000/reviews", {
+        const response = await fetch("http://localhost:5000/reviews", {
           method: "GET",
         });
 
@@ -41,7 +41,7 @@ const ReviewList: React.FC = () => {
   // Ta bort recension
   const handleDeleteReview = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:3000/reviews/${id}`, {
+      const response = await fetch(`http://localhost:5000/reviews/${id}`, {
         method: "DELETE",
         credentials: "include", // Skicka med credentials (ex. cookies) för autentisering
       });

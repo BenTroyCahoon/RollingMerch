@@ -17,7 +17,7 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:3000/login", {
+      const response = await fetch("http://localhost:5000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
       if (response.ok) {
         setMessage("Inloggning lyckades!");
 
-        const userInfoResponse = await fetch("http://localhost:3000/userinfo", {
+        const userInfoResponse = await fetch("http://localhost:5000/userinfo", {
           method: "GET",
           credentials: "include",
         });

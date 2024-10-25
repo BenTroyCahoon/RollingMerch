@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       localStorage.setItem("autoLogout", "true");
 
       // Göra en begäran till backend för att logga ut och ta bort token på serversidan (t.ex. JWT i cookie)
-      fetch("http://localhost:3000/logout", {
+      fetch("http://localhost:5000/logout", {
         method: "POST",
         credentials: "include", // Inkluderar cookies
       })
@@ -85,12 +85,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     // Timer för utloggning (10 sekunder för testning)
-    let logoutTimer = setTimeout(logoutUser, 10000);
+    let logoutTimer = setTimeout(logoutUser, 300000);
 
     // Funktion för att återställa timern vid användaraktivitet
     const resetTimer = () => {
       clearTimeout(logoutTimer);
-      logoutTimer = setTimeout(logoutUser, 10000);
+      logoutTimer = setTimeout(logoutUser, 300000);
     };
 
     // Eventlyssnare för att återställa timern vid användaraktivitet
