@@ -4,6 +4,7 @@ import { Rating } from "react-simple-star-rating";
 import Cookies from "js-cookie";
 import "../styles/ReviewList.css";
 import { useNavigate } from "react-router-dom";
+import HomeButton from "../components/Homebutton";
 
 const ReviewPage: React.FC = () => {
   const { isLoggedIn, user } = useAuth();
@@ -80,6 +81,7 @@ const ReviewPage: React.FC = () => {
 
   return (
     <div className="review-page">
+      <HomeButton />
       <h1 className="review-title">Lämna en recension</h1>
       {user?.username && (
         <p className="review-username">Inloggad som: {user?.username}</p>
