@@ -124,6 +124,9 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const ipAddress = req.ip; // Få användarens IP-adress för loggning
+  const userAgent = req.headers["user-agent"] || "Unknown";
+  // Logga user-agent för att säkerställa att vi får rätt värde
+  console.log("User-Agent header från klient:", userAgent);
 
   try {
     // Sanera användarnamn för att undvika XSS
@@ -137,17 +140,34 @@ app.post("/login", async (req, res) => {
     conn.release(); // Frigör anslutningen när vi är klara
 
     if (!user) {
-      // Logga misslyckat inloggningsförsök
+      // Logga misslyckat inloggningsförsök med user-agent
       const conn2 = await pool.getConnection();
+      console.log("Misslyckat inloggningsförsök med user-agent:", userAgent);
+
       await conn2.query(
-        "INSERT INTO login_attempts (username, success, ip_address, failed_attempts) VALUES (?, ?, ?, ?)",
-        [sanitizedUsername, false, ipAddress, 0]
+        "INSERT INTO login_attempts (username, success, ip_address, failed_attempts, user_agent) VALUES (?, ?, ?, ?, ?)",
+        [sanitizedUsername, false, ipAddress, 0, userAgent]
       );
       conn2.release();
-      S;
+
       return res
         .status(400)
         .json({ message: "Fel användarnamn eller lösenord" });
+    }
+
+    // Funktion för att logga ett lyckat inloggningsförsök
+    async function logSuccessfulLogin(username, ipAddress, userAgent) {
+      const conn = await pool.getConnection();
+      try {
+        await conn.query(
+          "INSERT INTO login_attempts (username, success, ip_address, failed_attempts, user_agent) VALUES (?, ?, ?, ?, ?)",
+          [username, true, ipAddress, 0, userAgent]
+        );
+      } catch (error) {
+        console.error("Fel vid loggning av lyckat inloggningsförsök:", error);
+      } finally {
+        conn.release();
+      }
     }
 
     // Kontrollera om kontot är låst
@@ -181,8 +201,8 @@ app.post("/login", async (req, res) => {
 
       // Logga misslyckat inloggningsförsök
       await conn3.query(
-        "INSERT INTO login_attempts (username, success, ip_address, failed_attempts) VALUES (?, ?, ?, ?)",
-        [sanitizedUsername, false, ipAddress, failedAttempts]
+        "INSERT INTO login_attempts (username, success, ip_address, failed_attempts, user_agent ) VALUES (?, ?, ?, ?, ?)",
+        [sanitizedUsername, false, ipAddress, failedAttempts, userAgent]
       );
       conn3.release();
 
@@ -200,8 +220,8 @@ app.post("/login", async (req, res) => {
 
     // Logga lyckat inloggningsförsök
     await conn4.query(
-      "INSERT INTO login_attempts (username, success, ip_address, failed_attempts) VALUES (?, ?, ?, ?)",
-      [sanitizedUsername, true, ipAddress, 0]
+      "INSERT INTO login_attempts (username, success, ip_address, failed_attempts, user_agent) VALUES (?, ?, ?, ?, ?)",
+      [sanitizedUsername, true, ipAddress, 0, userAgent]
     );
     conn4.release();
 
@@ -288,6 +308,23 @@ app.get("/adminpage", verifyToken(2), (req, res) => {
   res.json({ message: "Välkommen till adminsidan!" });
 });
 
+app.get("/login-attempts", verifyToken(2), async (req, res) => {
+  const userAgent = req.headers["user-agent"] || "Unknown";
+  try {
+    // Hämta alla inloggningsförsök från tabellen `login_attempts`
+    const conn = await pool.getConnection();
+    const [loginAttempts] = await conn.query("SELECT * FROM login_attempts");
+    conn.release();
+
+    return res.status(200).json(loginAttempts);
+  } catch (error) {
+    console.error("Fel vid hämtning av inloggningsförsök:", error);
+    return res
+      .status(500)
+      .json({ message: "Serverfel vid hämtning av inloggningsförsök" });
+  }
+});
+
 // POST /feedback - Hantera feedback från användare
 app.post("/reviews", async (req, res) => {
   const { username, review, rating } = req.body;
@@ -369,6 +406,117 @@ app.delete("/reviews/:id", verifyToken(2), async (req, res) => {
   } catch (error) {
     console.error("Serverfel vid radering av recension:", error);
     return res.status(500).json({ message: "Serverfel" });
+  }
+});
+
+// Lägga till en ny produkt (endast admin)
+app.post("/products", verifyToken(2), async (req, res) => {
+  const { name, description, imageUrl, year, price, created_at, stock } =
+    req.body;
+
+  try {
+    const conn = await pool.getConnection();
+    const sql =
+      "INSERT INTO products (name, description, imageUrl, year, created_at, price, stock) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    await conn.query(sql, [
+      name,
+      description,
+      imageUrl,
+      year,
+      created_at,
+      price,
+      stock,
+    ]);
+    conn.release();
+    res.status(201).json({ message: "Produkt tillagd" });
+  } catch (error) {
+    console.error("Fel vid tillägg av produkt:", error);
+    res.status(500).json({ message: "Serverfel" });
+  }
+});
+
+app.get("/products", async (req, res) => {
+  try {
+    const conn = await pool.getConnection();
+    const products = await conn.query("SELECT * FROM products");
+    conn.release();
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error("Fel vid hämtning av produkter:", error);
+    res.status(500).json({ message: "Serverfel vid hämtning av produkter" });
+  }
+});
+
+// Ta bort en produkt (endast admin)
+app.delete("/products/:id", verifyToken(2), async (req, res) => {
+  const productId = req.params.id;
+
+  try {
+    const conn = await pool.getConnection();
+    await conn.query("DELETE FROM products WHERE id = ?", [productId]);
+    conn.release();
+    res.status(200).json({ message: "Produkt borttagen" });
+  } catch (error) {
+    console.error("Fel vid borttagning av produkt:", error);
+    res.status(500).json({ message: "Serverfel" });
+  }
+});
+
+app.get("/products/:productId/reviews", async (req, res) => {
+  const { productId } = req.params;
+
+  try {
+    const conn = await pool.getConnection();
+    const sql = "SELECT * FROM product_reviews WHERE product_id = ?";
+    const reviews = await conn.query(sql, [productId]);
+    conn.release();
+
+    res.status(200).json(reviews);
+  } catch (error) {
+    console.error("Fel vid hämtning av recensioner:", error);
+    res.status(500).json({ message: "Serverfel vid hämtning av recensioner" });
+  }
+});
+
+app.post("/products/:id/reviews", verifyToken(1), async (req, res) => {
+  // Kontrollera att användaren har exakt access_level 1
+  if (req.user.access_level !== 1) {
+    return res
+      .status(403)
+      .json({ message: "Endast vanliga användare kan skriva recensioner." });
+  }
+
+  const { text, rating, created_at, author, productId } = req.body;
+  if (!productId || !validator.isInt(productId.toString())) {
+    return res.status(400).json({ message: "ogiltigt produkt id" });
+  }
+
+  // Validera och sanera inmatningen
+  if (!validator.isInt(rating.toString(), { min: 1, max: 5 })) {
+    return res
+      .status(400)
+      .json({ message: "Ogiltigt betyg. Måste vara mellan 1 och 5." });
+  }
+
+  const sanitizedText = validator.escape(text);
+
+  try {
+    const conn = await pool.getConnection();
+    const sql =
+      "INSERT INTO product_reviews (product_id, text, rating, created_at, author) VALUES (?, ?, ?, ?, ?)";
+    await conn.query(sql, [
+      productId,
+      sanitizedText,
+      rating,
+      created_at,
+      author,
+    ]);
+    conn.release();
+    res.status(201).json({ message: "Recensionen sparades." });
+  } catch (error) {
+    console.error("Fel vid tillägg av recension:", error);
+    res.status(500).json({ message: "Serverfel" });
   }
 });
 

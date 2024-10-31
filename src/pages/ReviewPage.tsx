@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { Rating } from "react-simple-star-rating";
 import Cookies from "js-cookie";
-import "../styles/ReviewList.css";
+// import "../styles/ReviewList.css";
 import { useNavigate } from "react-router-dom";
 import HomeButton from "../components/Homebutton";
 
