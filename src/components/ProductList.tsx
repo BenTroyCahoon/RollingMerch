@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import ProductCard from "./ProductCard";
-import ProductDetails from "./ProductDetails";
-import Modal from "./Modal";
 
 interface Product {
   id: number;
@@ -13,10 +11,12 @@ interface Product {
   year: number;
 }
 
-const ProductList: React.FC = () => {
+interface ProductListProps {
+  onProductClick: (product: Product) => void; // Lägg till prop för klickhändelse
+}
+
+const ProductList: React.FC<ProductListProps> = ({ onProductClick }) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -39,16 +39,6 @@ const ProductList: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const handleOpenModal = (product: Product) => {
-    setSelectedProduct(product);
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedProduct(null);
-  };
-
   return (
     <div className="product-list">
       <h2 className="products-title">Produkter:</h2>
@@ -57,16 +47,10 @@ const ProductList: React.FC = () => {
           <ProductCard
             key={product.id}
             product={product}
-            onClick={() => handleOpenModal(product)}
+            onClick={() => onProductClick(product)} // Använd prop från parent-komponenten
           />
         ))}
       </div>
-
-      {showModal && selectedProduct && (
-        <Modal onClose={handleCloseModal}>
-          <ProductDetails product={selectedProduct} />
-        </Modal>
-      )}
     </div>
   );
 };

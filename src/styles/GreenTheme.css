@@ -105,7 +105,6 @@
 /* Produktlista */
 .product-list {
   display: flex;
-  flex-direction: row;
   flex-wrap: wrap; /* Tillåt radbrytning om produkterna inte får plats */
   gap: 20px;
   justify-content: center; /* Centrerar produkterna horisontellt */
