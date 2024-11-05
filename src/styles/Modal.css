@@ -1,0 +1,81 @@
+/* Styling för modalen (Modal.css) */
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 50, 0, 0.7); /* Halvtransparent mörkgrön bakgrund */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .modal-content {
+    background-color: #e6ffe6; /* Ljusgrön bakgrund för modalen */
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh; /* Begränsa höjden för modalen */
+    overflow-y: auto; /* Tillåt rullning om innehållet överstiger höjden */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
+  }
+  
+  .close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: #004400; /* Mörkgrön färg för stängningsknappen */
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .close-button:hover {
+    transform: scale(1.2);
+  }
+  
+  .modal-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .product-reviews-list {
+    margin-top: 20px;
+  }
+  
+  .product-review-item {
+    border-top: 1px solid #99cc99;
+    padding: 10px 0;
+  }
+  
+  .product-review-username {
+    font-weight: bold;
+    color: #004400;
+  }
+  
+  .product-review-rating {
+    margin: 5px 0;
+    color: #ffd700; /* Guldstjärnor för betyg */
+  }
+  
+  .product-review-text {
+    color: #003300;
+  }
+  
+  .product-review-date {
+    font-size: 0.9em;
+    color: #666;
+  }
+  
+  
+  
+  

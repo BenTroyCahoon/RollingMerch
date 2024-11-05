@@ -309,12 +309,14 @@ app.get("/adminpage", verifyToken(2), (req, res) => {
 });
 
 app.get("/login-attempts", verifyToken(2), async (req, res) => {
-  const userAgent = req.headers["user-agent"] || "Unknown";
   try {
     // Hämta alla inloggningsförsök från tabellen `login_attempts`
     const conn = await pool.getConnection();
-    const [loginAttempts] = await conn.query("SELECT * FROM login_attempts");
+    const loginAttempts = await conn.query("SELECT * FROM login_attempts");
+    console.log("JONAS", loginAttempts);
     conn.release();
+
+    console.log("Inloggningsförsök från databasen:", loginAttempts); // Logga data från databasen
 
     return res.status(200).json(loginAttempts);
   } catch (error) {

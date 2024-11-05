@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import LogoutButton from "../components/LogoutButton";
-// import "../styles/login-attempts.css";
+import "../styles/AdminPageStyle.css";
+import "../styles/GreenTheme.css";
 
 interface LoginAttempt {
   id: number;
@@ -45,16 +46,19 @@ const AdminPage: React.FC = () => {
 
           if (loginAttemptsResponse.ok) {
             const attemptsData = await loginAttemptsResponse.json();
+            console.log("API-svar från /login-attempts:", attemptsData); // Logga svaret
+
+            // Kontrollera att attemptsData är en array
+
             setLoginAttempts(attemptsData);
+            console.log("DETTA?!?!?");
+            console.log("ARRAY?", loginAttempts);
           } else {
-            console.error("Fel vid hämtning av inloggningsförsök");
+            console.error("Inloggningsförsök-data är inte en array");
+            setLoginAttempts([]); // Om det inte är en array, sätt som tom array
           }
         } else {
-          setMessage("Åtkomst nekad. Omdirigerar till inloggningssidan...");
-          setTimeout(() => {
-            console.log("oj oj coolt osv");
-            //navigate("/");
-          }, 1500);
+          console.error("Fel vid hämtning av inloggningsförsök");
         }
       } catch (error) {
         console.error("Fel vid hämtning av adminsidan:", error);
@@ -63,7 +67,7 @@ const AdminPage: React.FC = () => {
     };
 
     fetchAdminPage();
-  }, [isLoggedIn, user]);
+  }, [isLoggedIn, user, navigate]);
 
   // Funktion för att förenkla user agent-strängen
   const simplifyUserAgent = (userAgent: string) => {
@@ -85,12 +89,15 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  // Sortera och hämta de senaste 100 inloggningsförsöken
   const latestLoginAttempts = [...loginAttempts]
     .sort(
       (a, b) =>
         new Date(b.attempt_time).getTime() - new Date(a.attempt_time).getTime()
     )
     .slice(0, 100);
+
+  console.log(latestLoginAttempts);
 
   const handleAddProductClick = () => {
     navigate("/products"); // Navigera till sidan där admin kan lägga till produkt
@@ -114,26 +121,30 @@ const AdminPage: React.FC = () => {
         <p>{message}</p>
 
         <div className="login-attempts-container">
-          {latestLoginAttempts.map((attempt, index) => (
-            <div className="login-attempt-row" key={index}>
-              <div className="login-attempt-cell">{attempt.id}</div>
-              <div className="login-attempt-cell">{attempt.username}</div>
-              <div className="login-attempt-cell">
-                {new Date(attempt.attempt_time).toLocaleString()}
+          {latestLoginAttempts.length > 0 ? (
+            latestLoginAttempts.map((attempt, index) => (
+              <div className="login-attempt-row" key={index}>
+                <div className="login-attempt-cell">{attempt.id}</div>
+                <div className="login-attempt-cell">{attempt.username}</div>
+                <div className="login-attempt-cell">
+                  {new Date(attempt.attempt_time).toLocaleString()}
+                </div>
+                <div className="login-attempt-cell">
+                  {attempt.success ? (
+                    <span className="success-text">Ja</span>
+                  ) : (
+                    <span className="error-text">Nej</span>
+                  )}
+                </div>
+                <div className="login-attempt-cell">{attempt.ip_address}</div>
+                <div className="login-attempt-cell">
+                  {simplifyUserAgent(attempt.user_agent)}
+                </div>
               </div>
-              <div className="login-attempt-cell">
-                {attempt.success ? (
-                  <span className="success-text">Ja</span>
-                ) : (
-                  <span className="error-text">Nej</span>
-                )}
-              </div>
-              <div className="login-attempt-cell">{attempt.ip_address}</div>
-              <div className="login-attempt-cell">
-                {simplifyUserAgent(attempt.user_agent)}
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p>Inga inloggningsförsök att visa</p>
+          )}
         </div>
       </div>
     </div>

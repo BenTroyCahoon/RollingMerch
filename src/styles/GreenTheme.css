@@ -1,0 +1,224 @@
+/* Bakgrund och sidlayout */
+.page-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background-color: #e0f2e9; /* Mycket ljusgrön bakgrund för hela sidan */
+  color: #2e7d32; /* Mörkare grön för text */
+  min-height: 100vh;
+}
+
+/* Sidtitel */
+.page-title {
+  font-size: 2.5em;
+  color: #1b5e20; /* Djupare mörkgrön för sidtitel */
+  margin-bottom: 20px;
+}
+
+/* Knappar */
+.add-product-button, .home-button {
+  background-color: #388e3c; /* Stark grön färg för knappar */
+  color: #ffffff; /* Vit text för kontrast */
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 10px;
+  transition: background-color 0.3s;
+}
+
+.add-product-button:hover {
+  background-color: #2e7d32; /* Mörkare grön vid hovring */
+}
+
+.home-button {
+  background-color: #4caf50; /* Ljusgrön för hemknapp */
+}
+
+.home-button:hover {
+  background-color: #388e3c;
+}
+
+/* Sidinnehåll */
+.page-content {
+  background-color: #c8e6c9; /* Ljusgrön bakgrund för innehållsdel */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Inloggningsförsök */
+.login-attempts-container {
+  margin-top: 20px;
+  border-top: 2px solid #66bb6a; /* Mellangrön avgränsare för inloggningsförsök */
+  padding-top: 20px;
+  width: 100%;
+}
+
+.login-attempt-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #a5d6a7; /* Ljusgrön linje för att separera rader */
+}
+
+.login-attempt-cell {
+  width: 16%;
+  text-align: center;
+}
+
+.success-text {
+  color: #81c784; /* Mjuk grön för framgångsrika försök */
+  font-weight: bold;
+}
+
+.error-text {
+  color: #e53935; /* Röd för felaktiga försök */
+  font-weight: bold;
+}
+
+/* Justeringar för mindre skärmar */
+@media (max-width: 768px) {
+  .login-attempt-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .login-attempt-cell {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 5px;
+  }
+}
+
+/* User agent bakgrund */
+.login-attempt-cell.user-agent {
+  background-color: #a5d6a7; /* Ljusgrön bakgrund för användaragent */
+  color: #2e7d32; /* Mörkgrön text för kontrast */
+  padding: 5px;
+  border-radius: 4px;
+}
+
+/* Produktlista */
+.product-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap; /* Tillåt radbrytning om produkterna inte får plats */
+  gap: 20px;
+  justify-content: center; /* Centrerar produkterna horisontellt */
+  padding: 20px;
+}
+
+/* Produktkort */
+.product-card {
+  background-color: #66bb6a; /* Ljus grön för produktkorten */
+  border: 2px solid #388e3c; /* Mörkare grön ram */
+  border-radius: 8px;
+  width: 220px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  text-align: center;
+  color: #1b5e20; /* Mörkgrön text */
+  cursor: pointer;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  border-color: #2e7d32; /* Ännu mörkare grön ram vid hovring */
+}
+
+.product-card img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.product-card h3 {
+  font-size: 1.2em;
+  margin: 10px 0;
+  color: #1b5e20; /* Djup grön färg för produktnamnet */
+}
+
+.product-card p {
+  font-size: 0.9em;
+  color: #33691e; /* Mellangrön för beskrivningstext */
+}
+
+/* Modal för produktdetaljer */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 50, 0, 0.5); /* Halvtransparent mörkgrön bakgrund */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: #c8e6c9; /* Ljusgrön bakgrund för modalinnehåll */
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 600px;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #4caf50; /* Ljus grön färg för stängknappen */
+}
+
+/* Recensionslistan */
+.product-reviews-list {
+  margin-top: 20px;
+  background-color: #e0f7fa; /* Ljusgrön för recensionsbakgrund */
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-review-item {
+  background-color: #a5d6a7; /* Mellangrön bakgrund för varje recension */
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.product-review-username {
+  font-weight: bold;
+  color: #2e7d32; /* Mörkare grön för användarnamn */
+}
+
+.product-review-rating {
+  color: #388e3c; /* Medium grön för stjärnor */
+  margin: 5px 0;
+}
+
+.product-review-text {
+  color: #33691e; /* Mellangrön för recensionsinnehållet */
+  margin: 5px 0;
+}
+
+.product-review-date {
+  font-size: 0.8em;
+  color: #1b5e20; /* Mörkgrön för datumet */
+}
+
+
+
+  

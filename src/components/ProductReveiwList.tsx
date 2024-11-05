@@ -19,6 +19,40 @@ const ProductReviewsList: React.FC<ProductReviewsListProps> = ({
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // useEffect(() => {
+  //   const fetchReviews = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         `http://localhost:5000/products/${productId}/reviews`,
+  //         {
+  //           method: "GET",
+  //         }
+  //       );
+
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         setReviews(data);
+  //       } else {
+  //         console.error("Fel vid hämtning av recensioner");
+  //       }
+  //     } catch (error) {
+  //       console.error("Serverfel vid hämtning av recensioner:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchReviews();
+  // }, [productId]);
+
+  // if (loading) {
+  //   return <p>Hämtar recensioner...</p>;
+  // }
+
+  // if (reviews.length === 0) {
+  //   return <p>Inga recensioner ännu</p>;
+  // }
+
   useEffect(() => {
     const fetchReviews = async () => {
       try {
@@ -31,6 +65,7 @@ const ProductReviewsList: React.FC<ProductReviewsListProps> = ({
 
         if (response.ok) {
           const data = await response.json();
+          console.log("Hämtade recensioner:", data); // Logga recensionerna
           setReviews(data);
         } else {
           console.error("Fel vid hämtning av recensioner");
@@ -45,13 +80,6 @@ const ProductReviewsList: React.FC<ProductReviewsListProps> = ({
     fetchReviews();
   }, [productId]);
 
-  if (loading) {
-    return <p>Hämtar recensioner...</p>;
-  }
-
-  if (reviews.length === 0) {
-    return <p>Inga recensioner ännu</p>;
-  }
   return (
     <div className="product-reviews-list">
       <h2 className="product-reviews-title">Recensioner:</h2>

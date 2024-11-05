@@ -1,0 +1,45 @@
+/* Styling för listan av produkter */
+.product-list {
+    display: flex;
+    flex-wrap: wrap; /* Tillåt att produkterna bryts till nästa rad om de inte får plats */
+    gap: 20px; /* Mellanrum mellan produkterna */
+    justify-content: flex-start; /* Starta produkterna från vänster sida */
+    padding: 20px;
+  }
+  
+  /* Styling för varje enskilt produktkort */
+  .product-card {
+    background-color: #a0d795;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 200px; /* Begränsa bredden på produktkorten */
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    text-align: center;
+    cursor: pointer;
+  }
+  
+  .product-card img {
+    max-width: 100%; /* Gör så att bilden inte överskrider produktkortets bredd */
+    height: auto; /* Behåll bildens proportioner */
+    border-radius: 4px;
+  }
+  
+ 
+  .product-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .product-card h3 {
+    font-size: 1.2em;
+    margin: 10px 0;
+    color: #333;
+  }
+  
+  .product-card p {
+    font-size: 0.9em;
+    color: #777;
+  }
+  
+  
