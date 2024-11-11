@@ -259,7 +259,9 @@ import ProductList from "../components/ProductList";
 import ReviewList from "../components/ReviewList";
 import Modal from "../components/Modal";
 import ProductReviewsList from "../components/ProductReveiwList";
-import ProductReviewForm from "../components/ProductReviewForm"; // Lägg till import för recensionformulär
+import ProductReviewForm from "../components/ProductReviewForm";
+import CartIcon from "../components/CartIcon"; // Importera CartIcon
+import CartDetails from "../components/CartDetails"; // Importera CartDetails
 import { useAuth } from "../context/useAuth";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
@@ -280,6 +282,7 @@ const StorePage: React.FC = () => {
   const { isLoggedIn, setIsLoggedIn, user } = useAuth();
   const navigate = useNavigate();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showCart, setShowCart] = useState(false); // Ny state för att visa kundvagnen
 
   useEffect(() => {
     const checkLoginStatus = () => {
@@ -311,6 +314,10 @@ const StorePage: React.FC = () => {
     setSelectedProduct(null);
   };
 
+  const toggleCart = () => {
+    setShowCart(!showCart);
+  };
+
   return (
     <div className="page-layout">
       {isLoggedIn ? <LogoutButton /> : <LoginButton />}
@@ -319,18 +326,22 @@ const StorePage: React.FC = () => {
           Adminpanel
         </button>
       )}
+      <CartIcon onClick={toggleCart} />{" "}
+      {/* Lägg till kundvagnsikonen i hörnet */}
+      {showCart && <CartDetails />} {/* Visa kundvagnen om den är aktiverad */}
       <div className="page-content">
         <h1 className="page-title">HÄR ÄR AFFÄREN!</h1>
         <ProductList onProductClick={handleProductClick} />
         <ReviewList />
-        <button className="review-button" onClick={() => navigate("/review")}>
-          Lämna en recension
-        </button>
+        {isLoggedIn && user?.access_level === 1 && (
+          <button className="review-button" onClick={() => navigate("/review")}>
+            Lämna en recension
+          </button>
+        )}
       </div>
-
       {/* Modal för att visa produktinformation och recensioner */}
       {selectedProduct && (
-        <Modal onClose={handleModalClose} productId={selectedProduct.id}>
+        <Modal onClose={handleModalClose} product={selectedProduct}>
           <div className="product-details">
             <h2>{selectedProduct.name}</h2>
             <p>{selectedProduct.description}</p>

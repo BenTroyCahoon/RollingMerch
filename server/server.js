@@ -522,6 +522,78 @@ app.post("/products/:id/reviews", verifyToken(1), async (req, res) => {
   }
 });
 
+app.delete(
+  "/products/:productId/reviews/:reviewId",
+  verifyToken(2),
+  async (req, res) => {
+    const { productId, reviewId } = req.params;
+
+    try {
+      const conn = await pool.getConnection();
+      const sql = "DELETE FROM product_reviews WHERE product_id = ? AND id = ?";
+      await conn.query(sql, [productId, reviewId]);
+      conn.release();
+
+      res.status(200).json({ message: "Recension borttagen" });
+    } catch (error) {
+      console.error("Fel vid borttagning av recension:", error);
+      res
+        .status(500)
+        .json({ message: "Serverfel vid borttagning av recension" });
+    }
+  }
+);
+app.post("/products/:id/reserve", async (req, res) => {
+  const productId = req.params.id;
+
+  try {
+    if (isNaN(productId)) {
+      return res.status(400).json({ message: "Ogiltigt produkt-ID" });
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      const sql =
+        "UPDATE products SET stock = stock - 1 WHERE id = ? AND stock > 0";
+      const [result] = await conn.query(sql, [productId]);
+
+      if (result.affectedRows === 0) {
+        return res.status(400).json({ message: "Produkten är slut i lager" });
+      }
+
+      res.status(200).json({ message: "Produkten reserverades" });
+    } finally {
+      conn.release(); // Se till att alltid släppa anslutningen
+    }
+  } catch (error) {
+    console.error("Fel vid reservering av produkt:", error.stack);
+    res.status(500).json({ message: "Serverfel vid reservering av produkt" });
+  }
+});
+
+// Återställ en produkt (öka lagret)
+app.post("/products/:id/release", async (req, res) => {
+  const productId = req.params.id;
+
+  try {
+    if (isNaN(productId)) {
+      return res.status(400).json({ message: "Ogiltigt produkt-ID" });
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      const sql = "UPDATE products SET stock = stock + 1 WHERE id = ?";
+      await conn.query(sql, [productId]);
+      res.status(200).json({ message: "Produkten återställdes" });
+    } finally {
+      conn.release(); // Se till att alltid släppa anslutningen
+    }
+  } catch (error) {
+    console.error("Fel vid återställning av produkt:", error.stack);
+    res.status(500).json({ message: "Serverfel vid återställning av produkt" });
+  }
+});
+
 // Starta servern på port 3000
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
