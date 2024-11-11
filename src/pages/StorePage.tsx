@@ -260,7 +260,7 @@ import ReviewList from "../components/ReviewList";
 import Modal from "../components/Modal";
 import ProductReviewsList from "../components/ProductReveiwList";
 import ProductReviewForm from "../components/ProductReviewForm";
-import CartIcon from "../components/CartIcon"; // Importera CartIcon
+import CartIcon from "../components/CartIcon"; // Importera kundvagnsikonen
 import CartDetails from "../components/CartDetails"; // Importera CartDetails
 import { useAuth } from "../context/useAuth";
 import Cookies from "js-cookie";
@@ -276,6 +276,7 @@ interface Product {
   imageUrl: string;
   year: number;
   price: number;
+  stock: number;
 }
 
 const StorePage: React.FC = () => {

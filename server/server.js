@@ -543,54 +543,44 @@ app.delete(
     }
   }
 );
-app.post("/products/:id/reserve", async (req, res) => {
-  const productId = req.params.id;
+app.post("/products/:productId/reserve", async (req, res) => {
+  const { productId } = req.params;
+  const { quantity } = req.body;
 
   try {
-    if (isNaN(productId)) {
-      return res.status(400).json({ message: "Ogiltigt produkt-ID" });
-    }
-
     const conn = await pool.getConnection();
-    try {
-      const sql =
-        "UPDATE products SET stock = stock - 1 WHERE id = ? AND stock > 0";
-      const [result] = await conn.query(sql, [productId]);
+    const sql =
+      "UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?";
+    const [result] = await conn.query(sql, [quantity, productId, quantity]);
+    conn.release();
 
-      if (result.affectedRows === 0) {
-        return res.status(400).json({ message: "Produkten är slut i lager" });
-      }
-
+    if (result.affectedRows === 0) {
+      res
+        .status(400)
+        .json({ message: "Produkten finns inte i tillräckligt lager" });
+    } else {
       res.status(200).json({ message: "Produkten reserverades" });
-    } finally {
-      conn.release(); // Se till att alltid släppa anslutningen
     }
   } catch (error) {
-    console.error("Fel vid reservering av produkt:", error.stack);
-    res.status(500).json({ message: "Serverfel vid reservering av produkt" });
+    console.error("Fel vid reservering av produkt:", error);
+    res.status(500).json({ message: "Serverfel vid reservering" });
   }
 });
 
-// Återställ en produkt (öka lagret)
-app.post("/products/:id/release", async (req, res) => {
-  const productId = req.params.id;
+app.post("/products/:productId/release", async (req, res) => {
+  const { productId } = req.params;
+  const { quantity } = req.body;
 
   try {
-    if (isNaN(productId)) {
-      return res.status(400).json({ message: "Ogiltigt produkt-ID" });
-    }
-
     const conn = await pool.getConnection();
-    try {
-      const sql = "UPDATE products SET stock = stock + 1 WHERE id = ?";
-      await conn.query(sql, [productId]);
-      res.status(200).json({ message: "Produkten återställdes" });
-    } finally {
-      conn.release(); // Se till att alltid släppa anslutningen
-    }
+    const sql = "UPDATE products SET stock = stock + ? WHERE id = ?";
+    await conn.query(sql, [quantity, productId]);
+    conn.release();
+
+    res.status(200).json({ message: "Produkten återställdes" });
   } catch (error) {
-    console.error("Fel vid återställning av produkt:", error.stack);
-    res.status(500).json({ message: "Serverfel vid återställning av produkt" });
+    console.error("Fel vid återställning av produkt:", error);
+    res.status(500).json({ message: "Serverfel vid återställning" });
   }
 });
 
