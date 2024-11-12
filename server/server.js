@@ -9,6 +9,7 @@ import cors from "cors";
 import validator from "validator";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import { error } from "console";
 console.log("test");
 // Definiera __dirname med ES-moduler
 const __filename = fileURLToPath(import.meta.url);
@@ -547,11 +548,24 @@ app.post("/products/:productId/reserve", async (req, res) => {
   const { productId } = req.params;
   const { quantity } = req.body;
 
+  if (quantity >= 5) {
+    return res
+      .status(400)
+      .json({ message: "Du kan bara reservera max 5 produkter." });
+  }
+
   try {
     const conn = await pool.getConnection();
+
+    const [product] = await conn.query(
+      "SELECT stock FROM products WHERE id = ?",
+      [productId]
+    );
+
     const sql =
       "UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?";
-    const [result] = await conn.query(sql, [quantity, productId, quantity]);
+    const result = await conn.query(sql, [quantity, productId, quantity]);
+    console.log("BENJI", result);
     conn.release();
 
     if (result.affectedRows === 0) {
@@ -559,7 +573,9 @@ app.post("/products/:productId/reserve", async (req, res) => {
         .status(400)
         .json({ message: "Produkten finns inte i tillräckligt lager" });
     } else {
-      res.status(200).json({ message: "Produkten reserverades" });
+      res
+        .status(200)
+        .json({ saldo: product.stock, message: "Produkten reserverades" });
     }
   } catch (error) {
     console.error("Fel vid reservering av produkt:", error);
@@ -567,17 +583,66 @@ app.post("/products/:productId/reserve", async (req, res) => {
   }
 });
 
+// app.post("/products/:productId/release", async (req, res) => {
+//   const { productId } = req.params;
+//   const { quantity } = req.body;
+
+//   try {
+//     const conn = await pool.getConnection();
+
+//     const [product] = await conn.query(
+//       "SELECT stock FROM products WHERE id = ?",
+//       [productId]
+//     );
+//     console.log("1");
+//     const sql = "UPDATE products SET stock = stock + ? WHERE id = ?";
+//     await conn.query(sql, [quantity, productId]);
+//     console.log("2");
+//     conn.release();
+//     console.log("3");
+
+//     res
+//       .status(200)
+//       .json({ saldo: product.stock, message: "Produkten återställdes" });
+//   } catch (error) {
+//     console.error("Fel vid återställning av produkt:", error);
+//     res.status(500).json({ message: "Serverfel vid återställning" });
+//   }
+// });
+
 app.post("/products/:productId/release", async (req, res) => {
   const { productId } = req.params;
   const { quantity } = req.body;
 
   try {
     const conn = await pool.getConnection();
-    const sql = "UPDATE products SET stock = stock + ? WHERE id = ?";
-    await conn.query(sql, [quantity, productId]);
+
+    // Logga den mottagna kvantiteten
+    console.log("Mottagen kvantitet för release:", quantity);
+
+    // Uppdatera lagret
+    const updateStockQuery =
+      "UPDATE products SET stock = stock + ? WHERE id = ?";
+    const result = await conn.query(updateStockQuery, [quantity, productId]);
+
+    // Hämta uppdaterat lagerstatus
+    const [updatedProduct] = await conn.query(
+      "SELECT stock FROM products WHERE id = ?",
+      [productId]
+    );
+
+    console.log("Uppdaterat lagerstatus:", updatedProduct);
+
     conn.release();
 
-    res.status(200).json({ message: "Produkten återställdes" });
+    if (result.affectedRows === 0) {
+      res.status(400).json({ message: "Produkten kunde inte återställas" });
+    } else {
+      res.status(200).json({
+        saldo: updatedProduct.stock,
+        message: "Produkten återställdes",
+      });
+    }
   } catch (error) {
     console.error("Fel vid återställning av produkt:", error);
     res.status(500).json({ message: "Serverfel vid återställning" });

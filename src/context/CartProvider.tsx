@@ -1166,9 +1166,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ quantity: 1 }),
-    }).catch((error) =>
-      console.error("Fel vid reservering av produkt:", error)
-    );
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Fel vid reservering av produkt");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Backend-respons:", data);
+      })
+
+      .catch((error) =>
+        console.error("Fel vid reservering av produkt:", error)
+      );
   };
 
   const removeOneFromCart = (productId: number) => {
@@ -1188,9 +1199,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ quantity: 1 }),
-    }).catch((error) =>
-      console.error("Fel vid återställning av produkt:", error)
-    );
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Fel vid reservering av produkt");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Backend-respons:", data);
+      })
+
+      .catch((error) =>
+        console.error("Fel vid återställning av produkt:", error)
+      );
   };
 
   const removeFromCart = (productId: number) => {
@@ -1202,9 +1224,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ quantity: itemToRemove.quantity }),
-      }).catch((error) =>
-        console.error("Fel vid återställning av produkt:", error)
-      );
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Fel vid reservering av produkt");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Backend-respons:", data);
+        })
+
+        .catch((error) =>
+          console.error("Fel vid återställning av produkt:", error)
+        );
     }
 
     setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
